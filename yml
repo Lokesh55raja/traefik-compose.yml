@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+
+  traefik:
+    image: "traefik:v2.5.7"
+    command:
+      - --api.insecure=true
+      - --providers.docker=true
+    ports:
+      - "80:80"
+      - "8080:8080"
+    volumes:
+      - /var/run/docker.sock:/var/run/docker.sock
+
+  apache1:
+    image: httpd:2.4
+    container_name: backend1
+    volumes:
+      - /home/traefik-apache-load-balancer/apache1/index1.html:/usr/local/apache2/htdocs/index.html
+    ports:
+      - "81:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.backend1.entrypoints=http"
+      - "traefik.tcp.routers.backend1.rule=HostSNI(`*`)"
+      - "traefik.tcp.services.backend1.loadbalancer.server.port=80"
+
+  apache2:
+    image: httpd:2.4
+    container_name: backend2
+    volumes:
+      - /home/traefik-apache-load-balancer/apache2/index2.html:/usr/local/apache2/htdocs/index.html
+    ports:
+      - "82:80"
+    labels:
+      - "traefik.enable=true"
+      - "traefik.tcp.routers.backend2.entrypoints=http"
+      - "traefik.tcp.routers.backend2.rule=HostSNI(`*`)"
+      - "traefik.tcp.services.backend2.loadbalancer.server.port=80"
